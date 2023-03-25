@@ -1,0 +1,116 @@
+/*   ***************************************************************
+ *   This program is inteded only for NEUST OCP GENERAL TINIO (PAPAYA).
+ *   Developed by Kevin Felix Caluag- BSIT 4TH YEAR CLASS OF 2023.
+ *   
+ *   Quality Assurance Checker
+ *   John Lerry Samson
+ *   Jhonhil Bago
+ *   Jeziel Cuizon
+ *   ****************************************************************
+ */
+
+#include <Ethernet.h>
+#include <EEPROM.h>
+#include "GravityTDS.h"
+
+#define TdsSensorPin A2
+GravityTDS gravityTds;
+#define sensorPower 7
+
+#define waterlevelPin A0
+#define PH_OFFSET -1.00
+
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+int val = 0;
+float temperature = 25,tdsValue = 0;
+const int RELAY_PIN = 8;
+float b;
+
+char server[] = "192.168.1.227";
+IPAddress ip(192,168,1,200); 
+EthernetClient client; 
+
+void setup() {
+  
+  Serial.begin(9600);
+  pinMode(RELAY_PIN, OUTPUT);
+  pinMode(sensorPower, OUTPUT);
+  digitalWrite(sensorPower, LOW);
+  gravityTds.setPin(TdsSensorPin);
+  gravityTds.setAref(5.0);  //reference voltage on ADC, default 5.0V on Arduino UNO
+  gravityTds.setAdcRange(1024);  //1024 for 10bit ADC;4096 for 12bit ADC
+  gravityTds.begin();  //initialization
+
+   if (Ethernet.begin(mac) == 0) {
+   Serial.println("Failed to configure Ethernet using DHCP");
+   Ethernet.begin(mac, ip);
+   } 
+  delay(1000);
+}
+
+float readSensor() {
+  digitalWrite(sensorPower, HIGH);
+  val = analogRead(waterlevelPin);
+  delay(1500);
+  digitalWrite(sensorPower, LOW);
+  return val;
+}
+
+float tdsValues(){
+    gravityTds.setTemperature(temperature);  // set the temperature and execute temperature compensation
+    gravityTds.update();  //sample and calculate
+    float tdsVal = gravityTds.getTdsValue();  // then get the value
+    return tdsVal;
+}
+
+void loop() {
+//   if (client.connect(server, 80)) {
+//    Serial.println("connected");
+//    
+//    String waterlevelPostName = "waterlevel=";
+//    String waterqualityPostName = "& waterquality=";
+
+    int waterlevel = readSensor();
+
+    if(waterlevel>400){
+      Serial.println(waterlevel);
+      digitalWrite(RELAY_PIN, HIGH);
+    }else{
+      Serial.println(waterlevel);
+      digitalWrite(RELAY_PIN, LOW);
+    }
+
+//    String dataToAddDBreview = (waterlevelPostName+waterlevel+waterqualityPostName+tdsValues()); 
+  
+//    client.println("POST /lwsv2/MmsSensorsData.php HTTP/1.1");
+//    client.println("Host: 192.168.1.227");
+//    client.println("Content-Type: application/x-www-form-urlencoded");
+//    client.print("Content-Length: ");
+//    client.println(dataToAddDBreview.length());
+//    client.println();
+//    client.print(dataToAddDBreview);
+//    Serial.print(dataToAddDBreview);
+//   }else{
+//    Serial.println("Not Connected");
+//   }
+   
+  delay(5000);
+  
+}
+
+
+waterlevelsensor
+  red=signal
+  yellow=positive
+  white=ground
+
+TdsSensorPin
+  green=signal 
+  blue=positive
+  violet=ground
+
+relay 1
+  brown=ground
+  white=input1
+  orange=input2
+  green=vcc
